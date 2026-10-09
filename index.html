@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>我該買哪一台 Mac?</title>
+<script>
+/* 載入前先套用已儲存的主題,避免閃爍 */
+try{ var __t = localStorage.getItem('theme'); if(__t==='light'||__t==='dark') document.documentElement.dataset.theme = __t; }catch(e){}
+</script>
+<style>
+  :root{
+    color-scheme:light;
+    --bg:#f5f5f7; --card:#fff; --text:#1d1d1f; --sub:#6e6e73; --line:#d2d2d7;
+    --accent:#0071e3; --accent-soft:#e8f2fd; --ok:#1d8a3f; --warn:#b25e00; --radius:18px;
+  }
+  /* 手動選擇深色 */
+  :root[data-theme="dark"]{
+    color-scheme:dark;
+    --bg:#000; --card:#1c1c1e; --text:#f5f5f7; --sub:#a1a1a6; --line:#3a3a3c; --accent:#2997ff; --accent-soft:#0b2540; --ok:#30d158; --warn:#ffb454;
+  }
+  /* 自動:跟隨系統(未手動指定時) */
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme]){
+      color-scheme:dark;
+      --bg:#000; --card:#1c1c1e; --text:#f5f5f7; --sub:#a1a1a6; --line:#3a3a3c; --accent:#2997ff; --accent-soft:#0b2540; --ok:#30d158; --warn:#ffb454;
+    }
+  }
+  .topbar{display:flex;justify-content:flex-end;margin-bottom:12px}
+  .theme-btn{font:inherit;font-size:18px;line-height:1;cursor:pointer;color:var(--text);background:var(--card);
+    border:1.5px solid var(--line);border-radius:50%;width:40px;height:40px;padding:0;
+    display:inline-flex;align-items:center;justify-content:center;transition:.15s}
+  .theme-btn:hover{border-color:var(--accent)}
+  .theme-btn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+  .theme-btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang TC","Noto Sans TC",sans-serif;line-height:1.5}
+  .wrap{max-width:960px;margin:0 auto;padding:40px 20px 80px}
+  header{text-align:center;margin-bottom:32px}
+  h1{font-size:clamp(28px,5vw,44px);margin:0 0 8px;letter-spacing:-.5px}
+  header p{color:var(--sub);margin:0}
+  section.panel{background:var(--card);border-radius:var(--radius);padding:24px;margin-bottom:20px}
+  h2{font-size:20px;margin:0 0 4px}
+  .hint{color:var(--sub);font-size:14px;margin:0 0 16px}
+  fieldset{border:0;margin:0 0 8px;padding:0}
+  legend{font-size:13px;font-weight:600;color:var(--sub);margin:12px 0 8px;padding:0}
+  .chips{display:flex;flex-wrap:wrap;gap:10px}
+  .chip{position:relative}
+  .chip input{position:absolute;opacity:0;top:0;left:0;width:100%;height:100%;margin:0;cursor:pointer}
+  .chip label{display:flex;align-items:center;gap:8px;padding:10px 16px;border:1.5px solid var(--line);
+    border-radius:999px;font-size:15px;cursor:pointer;transition:.15s;user-select:none}
+  .chip input:hover + label{border-color:var(--accent)}
+  .chip input:checked + label{background:var(--accent);border-color:var(--accent);color:#fff}
+  .chip input:focus-visible + label{outline:3px solid var(--accent);outline-offset:2px}
+  .seg{display:inline-flex;background:var(--bg);border-radius:10px;padding:3px}
+  .seg .chip label{border:0;border-radius:8px;padding:7px 16px;font-size:14px}
+  .seg .chip input:checked + label{background:var(--card);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.2)}
+  .toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+  button.reset{background:none;border:1px solid var(--line);color:var(--sub);border-radius:999px;padding:7px 16px;cursor:pointer;font-size:14px}
+  button.reset:hover{color:var(--text);border-color:var(--text)}
+
+  #result{scroll-margin-top:20px}
+  .empty{text-align:center;color:var(--sub);padding:48px 16px}
+  .empty .big{font-size:48px}
+  .main{background:linear-gradient(135deg,var(--accent-soft),var(--card));border:1.5px solid var(--accent);
+    border-radius:var(--radius);padding:28px;animation:pop .35s ease}
+  @keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.main{animation:none}}
+  .badge{display:inline-block;background:var(--accent);color:#fff;font-size:12px;padding:3px 10px;border-radius:999px;margin-bottom:10px}
+  .main h3{font-size:clamp(24px,4vw,34px);margin:0 0 4px}
+  .tagline{color:var(--sub);margin:0 0 20px}
+  .specs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+  .spec{background:var(--card);border-radius:12px;padding:12px 14px}
+  .spec small{display:block;color:var(--sub);font-size:12px}
+  .spec b{font-size:17px}
+  .meter{display:flex;gap:4px;margin:6px 0 4px}
+  .meter i{flex:1;height:8px;border-radius:4px;background:var(--line)}
+  .meter i.on{background:var(--accent)}
+  .meter-label{display:flex;justify-content:space-between;font-size:12px;color:var(--sub);margin-bottom:20px}
+  .why h4,.alt h4{margin:0 0 8px;font-size:15px}
+  .why ul{margin:0;padding-left:20px;color:var(--sub);font-size:14px}
+  .why li b{color:var(--text)}
+  .note{margin-top:14px;font-size:13px;color:var(--ok)}
+  .duo{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:20px}
+  .duo-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .duo-card b{display:block;font-size:22px;margin:6px 0 4px}
+  .duo-card p{margin:0 0 10px;font-size:14px;color:var(--sub)}
+  .duo-card ul{margin:0 0 10px;padding-left:18px;font-size:14px}
+  .duo-card small{color:var(--sub);font-size:12px}
+  .tag{display:inline-block;font-size:12px;padding:2px 10px;border-radius:999px;background:var(--ok);color:#fff}
+  .tag.b{background:var(--accent)}
+  .price{margin:10px 0}
+  .price b{font-size:20px;font-weight:700}
+  .price span{color:var(--sub);font-size:13px}
+  .price small{display:block;color:var(--sub);font-size:12px;line-height:1.4;margin-top:2px}
+  .price em{display:block;font-style:normal;font-size:12px;color:var(--warn);margin-top:4px}
+  .price.big{background:var(--card);border-radius:12px;padding:14px 16px;margin:0 0 16px}
+  .price.big b{font-size:30px;color:var(--accent)}
+  .price.big small{font-size:13px}
+  .alt{margin-top:20px}
+  .alt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+  .alt-card{background:var(--card);border-radius:14px;padding:16px}
+  .alt-card small{color:var(--sub)}
+  .alt-card b{display:block;font-size:17px;margin:2px 0}
+  .alt-card p{margin:4px 0 0;font-size:13px;color:var(--sub)}
+  footer{text-align:center;color:var(--sub);font-size:12px;margin-top:24px}
+  footer a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <button class="theme-btn" id="themeBtn" type="button" aria-pressed="false" aria-label="深色模式" title="深色模式">🌙</button>
+  </div>
+  <header>
+    <h1>我該買哪一台 Mac?</h1>
+    <p>選擇你的使用情境與常用軟體,即時為你推薦最適合的機型</p>
+  </header>
+
+  <noscript>
+    <section class="panel" role="alert">
+      <h2>⚠️ 目前的檢視環境無法執行互動功能</h2>
+      <p class="hint">這個頁面需要 JavaScript 才能顯示選項與推薦結果。請改用 Safari、Chrome 等瀏覽器開啟,而不是檔案預覽或 App 內建檢視器。</p>
+    </section>
+  </noscript>
+  <section class="panel" aria-labelledby="h-scene">
+    <div class="toolbar">
+      <div><h2 id="h-scene">① 使用情境</h2><p class="hint">可複選</p></div>
+      <button class="reset" id="reset" type="button">全部重設</button>
+    </div>
+    <div class="chips" id="scenes" role="group" aria-labelledby="h-scene"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="h-sw">
+    <h2 id="h-sw">② 常用軟體</h2>
+    <p class="hint">可複選</p>
+    <div id="software"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="h-pref">
+    <h2 id="h-pref">③ 機型偏好</h2>
+    <p class="hint">筆電方便攜帶,桌機同價位效能通常更好</p>
+    <div class="seg chips" role="radiogroup" aria-labelledby="h-pref" id="pref"></div>
+  </section>
+
+  <div id="result" aria-live="polite"></div>
+
+  <footer>
+    價格為新台幣(NT$),依提供的價格表整理,僅供參考;實際規格、優惠與價格請以
+    <a href="https://www.apple.com/tw/mac/compare/" target="_blank" rel="noopener">Apple 台灣官網</a> 為準。
+  </footer>
+</div>
+
+<script>
+/* ============ 資料區:想調整推薦邏輯,只需改這裡 ============
+   lvl: 需求等級 1(入門)~6(旗艦)  ram: 建議最低記憶體(GB)  sto: 建議最低儲存空間(GB) */
+const SCENES = [
+  {id:'web',   icon:'🌐', name:'上網 / 文書',       lvl:1, ram:8, sto:256},
+  {id:'video', icon:'🎬', name:'看影片 / 追劇',     lvl:1, ram:8, sto:256},
+  {id:'meet',  icon:'📹', name:'視訊會議 / 遠距',   lvl:1, ram:8, sto:256},
+  {id:'casual',icon:'🎲', name:'玩小遊戲(休閒 / 2D / Apple Arcade)', lvl:1, ram:8, sto:256},
+  {id:'aaa',   icon:'🎮', name:'玩大型遊戲',        lvl:4, ram:24, sto:1024},
+  {id:'photo', icon:'📷', name:'照片修圖 / 攝影',   lvl:3, ram:24, sto:1024},
+  {id:'draw',  icon:'🎨', name:'繪圖 / 設計',       lvl:3, ram:24, sto:512},
+  {id:'edit',  icon:'✂️', name:'影音剪輯',          lvl:4, ram:32, sto:1024},
+  {id:'music', icon:'🎹', name:'音樂製作',          lvl:3, ram:24, sto:1024},
+  {id:'code',  icon:'💻', name:'程式開發',          lvl:3, ram:24, sto:512},
+  {id:'3d',    icon:'🧊', name:'3D 建模 / 動畫',    lvl:5, ram:48, sto:1024},
+  {id:'ai',    icon:'🤖', name:'AI 雲端應用',       lvl:1, ram:8, sto:256},
+  {id:'localai',icon:'🧠',name:'AI 本機跑模型',     lvl:5, ram:48, sto:1024},
+];
+
+const SOFTWARE = [
+  {group:'辦公 / 協作', items:[
+    {id:'office', icon:'📊', name:'Microsoft Office', lvl:1, ram:8, sto:256},
+    {id:'iwork',  icon:'📝', name:'Pages / Numbers / Keynote', lvl:1, ram:8, sto:256},
+    {id:'gws',    icon:'📧', name:'Google Workspace', lvl:1, ram:8, sto:256},
+    {id:'notion', icon:'🗂️', name:'Notion / Slack / Zoom', lvl:1, ram:8, sto:256},
+  ]},
+  {group:'AI 工具', items:[
+    {id:'chatgpt',icon:'💬', name:'ChatGPT', lvl:1, ram:8, sto:256},
+    {id:'claude', icon:'🟠', name:'Claude', lvl:1, ram:8, sto:256},
+    {id:'gemini', icon:'✨', name:'Gemini / Copilot', lvl:1, ram:8, sto:256},
+    {id:'cursor', icon:'⌨️', name:'Cursor / Claude Code', lvl:2, ram:24, sto:512},
+    {id:'ollama', icon:'🦙', name:'Ollama / LM Studio / MLX', lvl:5, ram:48, sto:1024},
+    {id:'sd',     icon:'🖼️', name:'Stable Diffusion / ComfyUI', lvl:5, ram:48, sto:1024},
+  ]},
+  {group:'創作 / 設計', items:[
+    {id:'adobe',  icon:'🅰️', name:'Adobe Photoshop / Lightroom / Illustrator', lvl:3, ram:24, sto:1024},
+    {id:'adobev', icon:'🎞️', name:'Adobe Premiere / After Effects', lvl:4, ram:32, sto:1024},
+    {id:'figma',  icon:'📐', name:'Figma / Sketch', lvl:2, ram:16, sto:512},
+    {id:'fcp',    icon:'🎥', name:'Final Cut Pro', lvl:4, ram:32, sto:1024},
+    {id:'davinci',icon:'🎚️', name:'DaVinci Resolve', lvl:4, ram:32, sto:1024},
+    {id:'logic',  icon:'🎧', name:'Logic Pro / Ableton', lvl:3, ram:24, sto:1024},
+    {id:'blender',icon:'🫖', name:'Blender / Cinema 4D', lvl:5, ram:48, sto:1024},
+  ]},
+  {group:'開發 / 專業', items:[
+    {id:'xcode',  icon:'🔨', name:'Xcode', lvl:3, ram:24, sto:1024},
+    {id:'vscode', icon:'🧩', name:'VS Code / JetBrains', lvl:2, ram:16, sto:512},
+    {id:'docker', icon:'🐳', name:'Docker / 虛擬機 (Parallels)', lvl:3, ram:32, sto:1024},
+    {id:'cad',    icon:'📏', name:'AutoCAD / Fusion / SolidWorks*', lvl:3, ram:32, sto:512},
+  ]},
+  {group:'遊戲', items:[
+    {id:'arcade', icon:'🕹️', name:'Apple Arcade / 休閒類 App Store 遊戲', lvl:1, ram:8, sto:256},
+    {id:'steam',  icon:'🎯', name:'Steam / CrossOver / 遊戲移植版', lvl:4, ram:24, sto:1024},
+  ]},
+];
+
+/* ===== 價格資料(NT$,依提供的價格表)=====
+   c(記憶體GB, 儲存GB, 價格, 說明) */
+const c = (ram,sto,price,label)=>({ram,sto,price,label});
+const NEO = [
+  c(8,256,22900,'MacBook Neo 13 吋 · A18 Pro'),
+  c(8,512,25900,'MacBook Neo 13 吋 · A18 Pro'),
+];
+const AIR13 = [
+  c(16,512,42900,'MacBook Air 13.6 吋 · M5(10 核 CPU / 8 核 GPU)'),
+  c(16,1024,53400,'MacBook Air 13.6 吋 · M5(10 核 CPU / 10 核 GPU)'),
+  c(24,1024,60400,'MacBook Air 13.6 吋 · M5(10 核 CPU / 10 核 GPU)'),
+];
+const AIR15 = [
+  c(16,512,49900,'MacBook Air 15.3 吋 · M5'),
+  c(16,1024,60400,'MacBook Air 15.3 吋 · M5'),
+  c(24,1024,67400,'MacBook Air 15.3 吋 · M5'),
+];
+const IMAC = [
+  c(16,256,49900,'iMac 24 吋 · M4(8 核 CPU / 8 核 GPU)'),
+  c(16,256,57900,'iMac 24 吋 · M4(10 核 CPU / 10 核 GPU)'),
+  c(16,512,64900,'iMac 24 吋 · M4(10 核 CPU / 10 核 GPU)'),
+  c(24,512,71900,'iMac 24 吋 · M4(10 核 CPU / 10 核 GPU)'),
+];
+const MBP14 = [
+  c(16,1024,64900,'MacBook Pro 14.2 吋 · M5'),
+  c(24,1024,71900,'MacBook Pro 14.2 吋 · M5'),
+  c(32,1024,78900,'MacBook Pro 14.2 吋 · M5'),
+];
+const MBP_PRO = [
+  c(24,1024,84900,'MacBook Pro 14.2 吋 · M5 Pro(15 核 CPU / 16 核 GPU)'),
+  c(24,1024,99900,'MacBook Pro 16.2 吋 · M5 Pro(18 核 CPU / 20 核 GPU)'),
+  c(24,2048,102400,'MacBook Pro 14.2 吋 · M5 Pro(15 核 CPU / 16 核 GPU)'),
+  c(24,2048,109900,'MacBook Pro 14.2 吋 · M5 Pro(18 核 CPU / 20 核 GPU)'),
+  c(48,1024,120900,'MacBook Pro 16.2 吋 · M5 Pro(18 核 CPU / 20 核 GPU)'),
+];
+const MBP_MAX = [
+  c(36,2048,139900,'MacBook Pro 14.2 吋 · M5 Max(18 核 CPU / 32 核 GPU)'),
+  c(36,2048,144900,'MacBook Pro 16.2 吋 · M5 Max(18 核 CPU / 32 核 GPU)'),
+  c(48,2048,169900,'MacBook Pro 16.2 吋 · M5 Max(18 核 CPU / 40 核 GPU)'),
+];
+const MINI = [
+  c(16,256,29900,'Mac mini · M6(12 核 CPU / 12 核 GPU)'),
+  c(16,512,36900,'Mac mini · M6(12 核 CPU / 12 核 GPU)'),
+  c(24,512,43900,'Mac mini · M6(12 核 CPU / 12 核 GPU)'),
+];
+const MINI_PRO = [c(24,512,59900,'Mac mini · M5 Pro(15 核 CPU / 16 核 GPU)')];
+const STUDIO_MAX = [c(36,512,84900,'Mac Studio · M5 Max(18 核 CPU / 32 核 GPU)')];
+const STUDIO_ULTRA = [c(96,1024,199900,'Mac Studio · M5 Ultra(30 核 CPU / 64 核 GPU)')];
+
+const TIERS = [
+  null,
+  {name:'入門', laptop:{n:'MacBook Neo 或 MacBook Air', cfgs:[...NEO,...AIR13], t:'輕巧、無風扇靜音、續航強,日常使用綽綽有餘'},
+         desk:{n:'Mac mini(M6)', cfgs:MINI, t:'小巧桌機,CP 值最高;需另購螢幕、鍵盤與滑鼠'}},
+  {name:'主流', laptop:{n:'MacBook Air 13 / 15 吋(M5)', cfgs:[...AIR13,...AIR15], t:'輕薄、續航強;13 吋好攜帶、15 吋螢幕更大,多工與輕度創作更舒適'},
+         desk:{n:'iMac 24 吋(M4)', cfgs:IMAC, t:'一體機,4.5K 螢幕與喇叭,開箱即用'}},
+  {name:'進階', laptop:{n:'MacBook Pro 14 吋(M5)', cfgs:MBP14, t:'主動散熱、Liquid Retina XDR 螢幕,持續效能穩定'},
+         desk:{n:'Mac mini(M6,高記憶體配置)', cfgs:MINI, t:'同價位效能最高;需另購螢幕。想要一體機可改選 iMac'}},
+  {name:'專業', laptop:{n:'MacBook Pro 14 / 16 吋(M5 Pro)', cfgs:MBP_PRO, t:'更多 CPU / GPU 核心與記憶體頻寬,適合 4K 剪輯與大型遊戲'},
+         desk:{n:'Mac mini(M5 Pro)', cfgs:MINI_PRO, t:'小機身高效能,性價比極高的專業桌機;需另購螢幕'}},
+  {name:'高階', laptop:{n:'MacBook Pro 14 / 16 吋(M5 Max)', cfgs:MBP_MAX, t:'頂級 GPU 與超大統一記憶體,3D 與本機 AI 的行動工作站'},
+         desk:{n:'Mac Studio(M5 Max)', cfgs:STUDIO_MAX, t:'長時間滿載也穩定,散熱與擴充性更佳;需另購螢幕'}},
+  {name:'旗艦', laptop:{n:'MacBook Pro 16 吋(M5 Max,最高配置)', cfgs:[MBP_MAX[2]], t:'筆電的極限配置,需要極大記憶體時的選擇'},
+         desk:{n:'Mac Studio(M5 Ultra)', cfgs:STUDIO_ULTRA, t:'最強效能與最大記憶體,可處理超大型模型與專案;需另購螢幕'}},
+];
+
+const PREFS = [
+  {id:'any',    name:'都可以'},
+  {id:'laptop', name:'💻 筆電'},
+  {id:'desk',   name:'🖥️ 桌機'},
+];
+const RAM_STEPS = [8,16,24,32,48,64,96,128];
+const STO_STEPS = [256,512,1024,2048];
+
+/* ============ 畫面建立 ============ */
+const $ = s => document.querySelector(s);
+const state = {ids:new Set(), pref:'any'};
+const ALL = [...SCENES, ...SOFTWARE.flatMap(g=>g.items)];
+
+function chip(item, type, name){
+  const d = document.createElement('div'); d.className='chip';
+  d.innerHTML = `<input type="${type}" id="${name}-${item.id}" ${type==='radio'?`name="${name}"`:''} value="${item.id}">
+                 <label for="${name}-${item.id}">${item.icon?item.icon+' ':''}${item.name}</label>`;
+  return d;
+}
+SCENES.forEach(s => $('#scenes').appendChild(chip(s,'checkbox','c')));
+SOFTWARE.forEach((g,gi) => {
+  const fs = document.createElement('fieldset');
+  fs.innerHTML = `<legend>${g.group}</legend><div class="chips"></div>`;
+  g.items.forEach(i => fs.querySelector('.chips').appendChild(chip(i,'checkbox','c')));
+  $('#software').appendChild(fs);
+});
+PREFS.forEach(p => {
+  const c = chip(p,'radio','pref'); if(p.id===state.pref) c.querySelector('input').checked = true;
+  $('#pref').appendChild(c);
+});
+
+/* 深色模式開關:預設跟隨系統,按下後固定為深色/淺色並記住 */
+const themeBtn = $('#themeBtn');
+const darkMQ = window.matchMedia('(prefers-color-scheme: dark)');
+const isDark = () => {
+  const t = document.documentElement.dataset.theme;
+  return t ? t==='dark' : darkMQ.matches;
+};
+function paintThemeBtn(){
+  const d = isDark();
+  themeBtn.setAttribute('aria-pressed', String(d));
+  themeBtn.textContent = d ? '☀️' : '🌙';   // 深色模式顯示太陽(點擊切回一般)、一般模式顯示月亮(點擊切到深色)
+}
+themeBtn.onclick = () => {
+  const next = isDark() ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  try{ localStorage.setItem('theme', next); }catch(e){}
+  paintThemeBtn();
+};
+/* 舊版瀏覽器沒有 addEventListener / 失敗時也不能影響後面的程式 */
+try{
+  if(darkMQ.addEventListener) darkMQ.addEventListener('change', paintThemeBtn);
+  else if(darkMQ.addListener) darkMQ.addListener(paintThemeBtn);
+}catch(e){}
+paintThemeBtn();
+
+document.addEventListener('change', e => {
+  const el = e.target;
+  if(el.name==='pref') state.pref = el.value;
+  else if((el.id||'').indexOf('c-')===0) el.checked ? state.ids.add(el.value) : state.ids.delete(el.value);
+  render();
+});
+$('#reset').onclick = () => {
+  state.ids.clear();
+  document.querySelectorAll('input[type=checkbox]').forEach(i=>i.checked=false);
+  render();
+};
+
+/* ============ 推薦邏輯 ============ */
+const roundUp = (v, steps) => steps.find(s=>s>=v) || steps[steps.length-1];
+
+function recommend(){
+  const picked = ALL.filter(i => state.ids.has(i.id));
+  if(!picked.length) return null;
+  const maxLvl = Math.max(...picked.map(i=>i.lvl));
+  const heavy = picked.filter(i=>i.lvl>=4).length;
+  const boosted = heavy>=3 && maxLvl<6;           // 同時有 3 項以上重度需求 → 升一級
+  const lvl = Math.min(6, maxLvl + (boosted?1:0));
+  const ram = roundUp(Math.max(...picked.map(i=>i.ram)) * (boosted?1.5:1), RAM_STEPS);
+  const sto = roundUp(Math.max(...picked.map(i=>i.sto)), STO_STEPS);
+  const deciders = picked.filter(i=>i.lvl===maxLvl);
+  return {lvl, ram, sto, deciders, boosted, count:picked.length};
+}
+
+const fmtSto = g => g>=1024 ? (g/1024)+' TB' : g+' GB';
+const nt = n => 'NT$ ' + n.toLocaleString('en-US');
+const minPrice = cfgs => Math.min(...cfgs.map(x=>x.price));
+
+/* 找出「符合建議記憶體+儲存空間」的最低價配置;若沒有則退而求其次並附註 */
+function priceInfo(cfgs, ram, sto){
+  const asc = [...cfgs].sort((a,b)=>a.price-b.price);
+  let cfg = asc.find(x=>x.ram>=ram && x.sto>=sto);
+  if(cfg) return {cfg, note:''};
+  cfg = asc.find(x=>x.ram>=ram);
+  if(cfg) return {cfg, note:`此配置儲存空間 ${fmtSto(cfg.sto)},低於建議的 ${fmtSto(sto)},可搭配外接 SSD 或洽官網選配`};
+  cfg = [...cfgs].sort((a,b)=>b.ram-a.ram || b.price-a.price)[0];
+  return {cfg, note:`價格表中此機型最高為 ${cfg.ram} GB,低於建議的 ${ram} GB,更高規格請至官網確認選配與價格`};
+}
+function cfgHtml(cfg, note=''){
+  return `<div class="price"><b>${nt(cfg.price)}</b>
+    <small>${cfg.label}<br>${cfg.ram} GB 記憶體 · ${fmtSto(cfg.sto)} 儲存空間</small>
+    ${note ? `<em>⚠️ ${note}</em>` : ''}</div>`;
+}
+function priceBlock(cfgs, ram, sto){
+  const {cfg, note} = priceInfo(cfgs, ram, sto);
+  return cfgHtml(cfg, note);
+}
+function fromPrice(cfgs){
+  return `<div class="price"><b>${nt(minPrice(cfgs))}</b> <span>起</span></div>`;
+}
+
+function render(){
+  const out = $('#result');
+  const r = recommend();
+  if(!r){
+    out.innerHTML = `<div class="panel empty"><div class="big">👆</div><p>請從上方選擇至少一項,推薦結果會顯示在這裡</p></div>`;
+    return;
+  }
+  const t = TIERS[r.lvl];
+  const side = state.pref==='desk' ? 'desk' : 'laptop';
+  const oppSide = side==='desk' ? 'laptop' : 'desk';
+  const primary = t[side];
+  const nextTier = r.lvl<6 ? TIERS[r.lvl+1][side] : null;
+  const pi = m => priceInfo(m.cfgs, r.ram, r.sto).cfg;
+  // 右邊的推薦:再上一級(多一點餘裕)。
+  // 已是最高級、或再上一級選到的配置與左邊相同(重複)時,改推另一種形態(筆電↔桌機)
+  const topTier = !nextTier || pi(nextTier)===pi(primary);
+  const second = topTier ? t[oppSide] : nextTier;
+  const lower = TIERS[r.lvl-1];
+
+  // 入門筆電用 Neo / Air 專屬雙推薦卡;其餘等級用通用雙推薦卡
+  const special = r.lvl===1 && r.ram<=8 && side==='laptop';
+  const title = special ? 'MacBook Neo 或 MacBook Air' : `${primary.n} 或 ${second.n}`;
+  const tagline = special
+    ? '你的需求偏輕量,這兩款都能勝任,依預算與使用習慣挑選即可'
+    : (topTier ? '兩個選擇都能滿足你,依使用習慣(筆電或桌機)挑選即可'
+               : '左邊剛好夠用,右邊多一點餘裕、能用得更久,依預算與使用年限選擇');
+
+  const priceOf = m => pi(m).price;
+  const genCard = (tag, cls, m, extra='') => `
+      <div class="duo-card">
+        <span class="tag ${cls}">${tag}</span>
+        <b>${m.n}</b>
+        <p>${m.t}</p>
+        ${priceBlock(m.cfgs, r.ram, r.sto)}
+        ${extra}
+      </div>`;
+  const diff = priceOf(second) - priceOf(primary);
+  const diffTxt = topTier ? ''
+    : diff>=0 ? `<small>比左邊多 ${nt(diff)},換取更高效能與餘裕</small>`
+              : `<small>效能更高但價格較低,因為不含螢幕、鍵盤與滑鼠(需另購)</small>`;
+  const genHtml = `
+    <div class="duo">
+      ${genCard('剛好夠用', '', primary)}
+      ${genCard(topTier ? '另一種形態' : '更有餘裕', 'b', second, diffTxt)}
+    </div>`;
+  const duoHtml = `
+    <div class="duo">
+      <div class="duo-card">
+        <span class="tag">預算首選</span>
+        <b>MacBook Neo</b>
+        <p>最平價的 Mac,上網、文書、追劇、雲端 AI(ChatGPT、Claude)和輕量遊戲都夠用;大型 3D 遊戲不建議</p>
+        <ul>
+          <li>13 吋 · A18 Pro 晶片</li>
+          <li>8 GB 記憶體 · 256 GB 起</li>
+          <li>電池最長 16 小時</li>
+        </ul>
+        ${priceBlock(NEO, r.ram, r.sto)}
+        <small>適合:學生、輕量文書、第二台備用機</small>
+      </div>
+      <div class="duo-card">
+        <span class="tag b">彈性更大</span>
+        <b>MacBook Air</b>
+        <p>16 GB 起的記憶體,多工更從容,也能用得更久</p>
+        <ul>
+          <li>13.6 / 15.3 吋 · M5 晶片</li>
+          <li>16 GB 起 · 512 GB 起</li>
+          <li>電池最長 18 小時</li>
+        </ul>
+        ${priceBlock(AIR13, 16, r.sto)}
+        ${priceBlock(AIR15, 16, r.sto)}
+        <small>適合:開很多分頁/視窗、想用得更久、偶爾輕度創作</small>
+      </div>
+    </div>`;
+  const meter = [1,2,3,4,5,6].map(n=>`<i class="${n<=r.lvl?'on':''}"></i>`).join('');
+  // 其他選擇:另一種形態(旗艦等級已在雙推薦中)與較省預算的選項
+  const alts = [
+    !topTier ? `<div class="alt-card"><small>${oppSide==='desk' ? '想要桌機' : '想要可攜帶'}</small><b>${t[oppSide].n}</b><p>${t[oppSide].t}</p>${priceBlock(t[oppSide].cfgs, r.ram, r.sto)}</div>` : '',
+    r.lvl>1 ? `<div class="alt-card"><small>預算有限時(效能略降)</small><b>${lower[side].n}</b><p>日常沒問題,但重度工作時可能感到吃力</p>${fromPrice(lower[side].cfgs)}</div>` : '',
+  ].join('');
+
+  out.innerHTML = `
+  <div class="main" id="mainCard">
+    <span class="badge">雙推薦 · 已選 ${r.count} 項</span>
+    <h3>${title}</h3>
+    <p class="tagline">${tagline}</p>
+
+    <div class="meter" role="img" aria-label="效能等級 ${r.lvl} / 6:${t.name}">${meter}</div>
+    <div class="meter-label"><span>入門</span><span>效能等級:<b>${t.name}</b></span><span>旗艦</span></div>
+
+    <div class="specs">
+      <div class="spec"><small>建議記憶體</small><b>${r.ram} GB 以上</b></div>
+      <div class="spec"><small>建議儲存空間</small><b>${fmtSto(r.sto)} 以上</b></div>
+      <div class="spec"><small>效能等級</small><b>${r.lvl} / 6 · ${t.name}</b></div>
+    </div>
+
+    ${special ? duoHtml : genHtml}
+
+    <div class="why">
+      <h4>為什麼這樣推薦?</h4>
+      <ul>
+        <li>你的需求中最吃效能的是:<b>${r.deciders.map(i=>i.name).join('、')}</b></li>
+        ${r.boosted ? '<li>你同時有多項重度需求,因此<b>額外提升一級</b>並加大記憶體,以確保多工順暢</li>' : ''}
+        <li>記憶體與儲存空間購買後<b>無法自行升級</b>,建議一次配足</li>
+      </ul>
+      ${r.lvl===1 ? '<p class="note">✅ 你的需求偏輕量,不需要為用不到的效能多花錢。</p>' : ''}
+    </div>
+
+    <div class="alt"><h4>其他選擇</h4><div class="alt-grid">${alts}</div></div>
+  </div>`;
+}
+render();
+</script>
+</body>
+</html>
