@@ -95,6 +95,15 @@ try{ var __t = localStorage.getItem('theme'); if(__t==='light'||__t==='dark') do
   .price span{color:var(--sub);font-size:13px}
   .price small{display:block;color:var(--sub);font-size:12px;line-height:1.4;margin-top:2px}
   .price em{display:block;font-style:normal;font-size:12px;color:var(--warn);margin-top:4px}
+  .price .promo{display:inline-block;margin-top:8px;padding:4px 10px;border-radius:999px;
+    background:var(--ok);color:#fff;font-size:12px;font-weight:600}
+  .promo-banner{display:flex;align-items:center;gap:12px;background:var(--card);
+    border:1.5px solid var(--ok);border-radius:var(--radius);padding:14px 20px;margin-bottom:20px}
+  .promo-banner .icon{font-size:28px;line-height:1}
+  .promo-banner .txt{flex:1}
+  .promo-banner b{display:block;color:var(--ok);font-size:15px}
+  .promo-banner small{color:var(--sub);font-size:13px}
+  @media (max-width:480px){.promo-banner{padding:12px 14px;gap:10px}.promo-banner b{font-size:14px}}
   .price.big{background:var(--card);border-radius:12px;padding:14px 16px;margin:0 0 16px}
   .price.big b{font-size:30px;color:var(--accent)}
   .price.big small{font-size:13px}
@@ -118,6 +127,14 @@ try{ var __t = localStorage.getItem('theme'); if(__t==='light'||__t==='dark') do
     <p>選擇你的使用情境與常用軟體,即時為你推薦最適合的機型</p>
   </header>
 
+  <div class="promo-banner" id="promoBanner" role="note" hidden>
+    <span class="icon">⏰</span>
+    <div class="txt">
+      <b>限時促銷 10/01 – 10/18</b>
+      <small>推薦機型下方的綠色標籤為該檔期的優惠活動,實際優惠請以門市或官網為準</small>
+    </div>
+  </div>
+
   <noscript>
     <section class="panel" role="alert">
       <h2>⚠️ 目前的檢視環境無法執行互動功能</h2>
@@ -129,7 +146,7 @@ try{ var __t = localStorage.getItem('theme'); if(__t==='light'||__t==='dark') do
       <div><h2 id="h-scene">① 使用情境</h2><p class="hint">可複選</p></div>
       <button class="reset" id="reset" type="button">全部重設</button>
     </div>
-    <div class="chips" id="scenes" role="group" aria-labelledby="h-scene"></div>
+    <div id="scenes" role="group" aria-labelledby="h-scene"></div>
   </section>
 
   <section class="panel" aria-labelledby="h-sw">
@@ -156,20 +173,27 @@ try{ var __t = localStorage.getItem('theme'); if(__t==='light'||__t==='dark') do
 /* ============ 資料區:想調整推薦邏輯,只需改這裡 ============
    lvl: 需求等級 1(入門)~6(旗艦)  ram: 建議最低記憶體(GB)  sto: 建議最低儲存空間(GB) */
 const SCENES = [
-  {id:'web',   icon:'🌐', name:'上網 / 文書',       lvl:1, ram:8, sto:256},
-  {id:'video', icon:'🎬', name:'看影片 / 追劇',     lvl:1, ram:8, sto:256},
-  {id:'meet',  icon:'📹', name:'視訊會議 / 遠距',   lvl:1, ram:8, sto:256},
-  {id:'casual',icon:'🎲', name:'玩小遊戲(休閒 / 2D / Apple Arcade)', lvl:1, ram:8, sto:256},
-  {id:'aaa',   icon:'🎮', name:'玩大型遊戲',        lvl:4, ram:24, sto:1024},
-  {id:'photo', icon:'📷', name:'照片修圖 / 攝影',   lvl:3, ram:24, sto:1024},
-  {id:'draw',  icon:'🎨', name:'繪圖 / 設計',       lvl:3, ram:24, sto:512},
-  {id:'edit',  icon:'✂️', name:'影音剪輯',          lvl:4, ram:32, sto:1024},
-  {id:'music', icon:'🎹', name:'音樂製作',          lvl:3, ram:24, sto:1024},
-  {id:'code',  icon:'💻', name:'程式開發',          lvl:3, ram:24, sto:512},
-  {id:'data',  icon:'📈', name:'數據分析(Excel / Python / BI)', lvl:2, ram:24, sto:512},
-  {id:'3d',    icon:'🧊', name:'3D 建模 / 動畫',    lvl:5, ram:48, sto:1024},
-  {id:'ai',    icon:'🤖', name:'AI 雲端應用',       lvl:1, ram:8, sto:256},
-  {id:'localai',icon:'🧠',name:'AI 本機跑模型',     lvl:5, ram:48, sto:1024},
+  {group:'輕度 / 日常使用', items:[
+    {id:'web',   icon:'🌐', name:'上網 / 文書',       lvl:1, ram:8, sto:256},
+    {id:'video', icon:'🎬', name:'看影片 / 追劇',     lvl:1, ram:8, sto:256},
+    {id:'meet',  icon:'📹', name:'視訊會議 / 遠距',   lvl:1, ram:8, sto:256},
+    {id:'casual',icon:'🎲', name:'玩小遊戲(休閒 / 2D / Apple Arcade)', lvl:1, ram:8, sto:256},
+    {id:'ai',    icon:'🤖', name:'AI 雲端應用',       lvl:1, ram:8, sto:256},
+    {id:'photo_lite', icon:'📷', name:'照片修圖 - 輕度(Lightroom、少量 RAW)', lvl:2, ram:16, sto:512},
+    {id:'draw_lite',  icon:'🎨', name:'繪圖設計 - 輕度(Figma、簡單插畫)',     lvl:2, ram:16, sto:512},
+    {id:'edit_lite',  icon:'🎞️', name:'影音剪輯 - 輕度(iMovie、1080p 短片)',  lvl:3, ram:24, sto:1024},
+  ]},
+  {group:'專業 / 進階使用', items:[
+    {id:'photo', icon:'📸', name:'照片修圖 - 專業(Photoshop 多圖層、大量 RAW)', lvl:3, ram:24, sto:1024},
+    {id:'draw',  icon:'🖌️', name:'繪圖設計 - 專業(Illustrator、大型檔案)',     lvl:3, ram:24, sto:512},
+    {id:'edit',  icon:'✂️', name:'影音剪輯 - 專業(Premiere / FCP、4K 多軌)',  lvl:4, ram:32, sto:1024},
+    {id:'music', icon:'🎹', name:'音樂製作',          lvl:3, ram:24, sto:1024},
+    {id:'code',  icon:'💻', name:'程式開發',          lvl:3, ram:24, sto:512},
+    {id:'data',  icon:'📈', name:'數據分析(Excel / Python / BI)', lvl:2, ram:24, sto:512},
+    {id:'aaa',   icon:'🎮', name:'玩大型遊戲',        lvl:4, ram:24, sto:1024},
+    {id:'3d',    icon:'🧊', name:'3D 建模 / 動畫',    lvl:5, ram:48, sto:1024},
+    {id:'localai',icon:'🧠',name:'AI 本機跑模型',     lvl:5, ram:48, sto:1024},
+  ]},
 ];
 
 const SOFTWARE = [
@@ -284,7 +308,7 @@ const STO_STEPS = [256,512,1024,2048];
 /* ============ 畫面建立 ============ */
 const $ = s => document.querySelector(s);
 const state = {ids:new Set(), pref:'any'};
-const ALL = [...SCENES, ...SOFTWARE.flatMap(g=>g.items)];
+const ALL = [...SCENES.flatMap(g=>g.items), ...SOFTWARE.flatMap(g=>g.items)];
 
 function chip(item, type, name){
   const d = document.createElement('div'); d.className='chip';
@@ -292,7 +316,12 @@ function chip(item, type, name){
                  <label for="${name}-${item.id}">${item.icon?item.icon+' ':''}${item.name}</label>`;
   return d;
 }
-SCENES.forEach(s => $('#scenes').appendChild(chip(s,'checkbox','c')));
+SCENES.forEach(g => {
+  const fs = document.createElement('fieldset');
+  fs.innerHTML = `<legend>${g.group}</legend><div class="chips"></div>`;
+  g.items.forEach(i => fs.querySelector('.chips').appendChild(chip(i,'checkbox','c')));
+  $('#scenes').appendChild(fs);
+});
 SOFTWARE.forEach((g,gi) => {
   const fs = document.createElement('fieldset');
   fs.innerHTML = `<legend>${g.group}</legend><div class="chips"></div>`;
@@ -371,17 +400,49 @@ function priceInfo(cfgs, ram, sto){
   cfg = [...cfgs].sort((a,b)=>b.ram-a.ram || b.price-a.price)[0];
   return {cfg, note:`價格表中此機型最高為 ${cfg.ram} GB,低於建議的 ${ram} GB,更高規格請至官網確認選配與價格`};
 }
+/* ===== 促銷活動對照表(依 2026/10/01-10/18 操盤資料)===== */
+/* 促銷檔期:到期後 banner 自動隱藏,卡片上的促銷標籤也會停止顯示 */
+const PROMO_START = new Date('2026-10-01T00:00:00+08:00');
+const PROMO_END   = new Date('2026-10-18T23:59:59+08:00');
+const promoActive = () => {
+  const now = new Date();
+  return now >= PROMO_START && now <= PROMO_END;
+};
+(function(){
+  const el = document.getElementById('promoBanner');
+  if(el && promoActive()) el.hidden = false;
+})();
+
+function getPromo(label){
+  if(!promoActive()) return '';
+  if(label.indexOf('MacBook Neo')>=0)       return '🎁 現折 916 起';
+  if(label.indexOf('MacBook Air 13')>=0)    return '🎁 滿萬送 400 配件金';
+  if(label.indexOf('MacBook Air 15')>=0)    return '🎁 滿萬送 500 配件金';
+  if(label.indexOf('iMac')>=0)              return '🎁 現折 6%';
+  if(label.indexOf('MacBook Pro 14')>=0)    return '🎁 現折 3,894 起';
+  if(label.indexOf('MacBook Pro 16')>=0)    return '🎁 現折 5,994 起';
+  if(label.indexOf('Mac mini · M6')>=0)     return '🎁 滿萬送 200 配件金';
+  if(label.indexOf('Mac Studio')>=0)        return '🎁 滿萬送 200 配件金';
+  return '';
+}
+function promoTag(cfg){
+  const p = getPromo(cfg.label);
+  return p ? `<span class="promo">${p}</span>` : '';
+}
+
 function cfgHtml(cfg, note=''){
   return `<div class="price"><b>${nt(cfg.price)}</b>
     <small>${cfg.label}<br>${cfg.ram} GB 記憶體 · ${fmtSto(cfg.sto)} 儲存空間</small>
-    ${note ? `<em>⚠️ ${note}</em>` : ''}</div>`;
+    ${note ? `<em>⚠️ ${note}</em>` : ''}
+    ${promoTag(cfg)}</div>`;
 }
 function priceBlock(cfgs, ram, sto){
   const {cfg, note} = priceInfo(cfgs, ram, sto);
   return cfgHtml(cfg, note);
 }
 function fromPrice(cfgs){
-  return `<div class="price"><b>${nt(minPrice(cfgs))}</b> <span>起</span></div>`;
+  const cfg = [...cfgs].sort((a,b)=>a.price-b.price)[0];
+  return `<div class="price"><b>${nt(cfg.price)}</b> <span>起</span>${promoTag(cfg)}</div>`;
 }
 
 function render(){
