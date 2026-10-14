@@ -97,6 +97,15 @@ try{ var __t = localStorage.getItem('theme'); if(__t==='light'||__t==='dark') do
   .confirm-btn:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
   .confirm-btn:disabled{background:var(--line);color:var(--sub);cursor:not-allowed;box-shadow:none}
   .confirm-hint{margin:10px 0 0;font-size:13px;color:var(--sub)}
+  .price .promo{display:inline-block;margin-top:8px;padding:4px 10px;border-radius:999px;
+    background:var(--ok);color:#fff;font-size:12px;font-weight:600}
+  .promo-banner{display:flex;align-items:center;gap:12px;background:var(--card);
+    border:1.5px solid var(--ok);border-radius:var(--radius);padding:14px 20px;margin-bottom:20px}
+  .promo-banner .icon{font-size:28px;line-height:1}
+  .promo-banner .txt{flex:1}
+  .promo-banner b{display:block;color:var(--ok);font-size:15px}
+  .promo-banner small{color:var(--sub);font-size:13px}
+  @media (max-width:480px){.promo-banner{padding:12px 14px;gap:10px}.promo-banner b{font-size:14px}}
   .price.big{background:var(--card);border-radius:12px;padding:14px 16px;margin:0 0 16px}
   .price.big b{font-size:30px;color:var(--accent)}
   .price.big small{font-size:13px}
@@ -119,6 +128,14 @@ try{ var __t = localStorage.getItem('theme'); if(__t==='light'||__t==='dark') do
     <h1>我該買哪一台 Mac?</h1>
     <p>選擇你的使用需求與常用軟體,即時為你推薦最適合的機型</p>
   </header>
+
+  <div class="promo-banner" id="promoBanner" role="note" hidden>
+    <span class="icon">⏰</span>
+    <div class="txt">
+      <b>限時促銷 10/01 – 10/18</b>
+      <small>推薦機型下方的綠色標籤為該檔期的優惠活動,實際優惠請以門市或官網為準</small>
+    </div>
+  </div>
 
   <noscript>
     <section class="panel" role="alert">
@@ -397,10 +414,41 @@ function priceInfo(cfgs, ram, sto){
   cfg = [...cfgs].sort((a,b)=>b.ram-a.ram || b.price-a.price)[0];
   return {cfg, note:`價格表中此機型最高為 ${cfg.ram} GB,低於建議的 ${ram} GB,更高規格請至官網確認選配與價格`};
 }
+/* ===== 促銷活動對照表(依 2026/10/01-10/18 操盤資料)===== */
+/* 促銷檔期:到期後 banner 自動隱藏,卡片上的促銷標籤也會停止顯示 */
+const PROMO_START = new Date('2026-10-01T00:00:00+08:00');
+const PROMO_END   = new Date('2026-10-18T23:59:59+08:00');
+const promoActive = () => {
+  const now = new Date();
+  return now >= PROMO_START && now <= PROMO_END;
+};
+(function(){
+  const el = document.getElementById('promoBanner');
+  if(el && promoActive()) el.hidden = false;
+})();
+
+function getPromo(label){
+  if(!promoActive()) return '';
+  if(label.indexOf('MacBook Neo')>=0)       return '🎁 現折 916 起';
+  if(label.indexOf('MacBook Air 13')>=0)    return '🎁 滿萬送 400 配件金';
+  if(label.indexOf('MacBook Air 15')>=0)    return '🎁 滿萬送 500 配件金';
+  if(label.indexOf('iMac')>=0)              return '🎁 現折 6%';
+  if(label.indexOf('MacBook Pro 14')>=0)    return '🎁 現折 3,894 起';
+  if(label.indexOf('MacBook Pro 16')>=0)    return '🎁 現折 5,994 起';
+  if(label.indexOf('Mac mini · M6')>=0)     return '🎁 滿萬送 200 配件金';
+  if(label.indexOf('Mac Studio')>=0)        return '🎁 滿萬送 200 配件金';
+  return '';
+}
+function promoTag(cfg){
+  const p = getPromo(cfg.label);
+  return p ? `<span class="promo">${p}</span>` : '';
+}
+
 function cfgHtml(cfg, note=''){
   return `<div class="price"><b>${nt(cfg.price)}</b>
     <small>${cfg.label}<br>${cfg.ram} GB 記憶體 · ${fmtSto(cfg.sto)} 儲存空間</small>
-    ${note ? `<em>⚠️ ${note}</em>` : ''}</div>`;
+    ${note ? `<em>⚠️ ${note}</em>` : ''}
+    ${promoTag(cfg)}</div>`;
 }
 function priceBlock(cfgs, ram, sto){
   const {cfg, note} = priceInfo(cfgs, ram, sto);
@@ -408,7 +456,7 @@ function priceBlock(cfgs, ram, sto){
 }
 function fromPrice(cfgs){
   const cfg = [...cfgs].sort((a,b)=>a.price-b.price)[0];
-  return `<div class="price"><b>${nt(cfg.price)}</b> <span>起</span></div>`;
+  return `<div class="price"><b>${nt(cfg.price)}</b> <span>起</span>${promoTag(cfg)}</div>`;
 }
 
 function render(){
