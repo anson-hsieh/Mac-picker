@@ -19,13 +19,7 @@ try{ var __t = localStorage.getItem('theme'); if(__t==='light'||__t==='dark') do
     color-scheme:dark;
     --bg:#000; --card:#1c1c1e; --text:#f5f5f7; --sub:#a1a1a6; --line:#3a3a3c; --accent:#2997ff; --accent-soft:#0b2540; --ok:#30d158; --warn:#ffb454;
   }
-  /* 自動:跟隨系統(未手動指定時) */
-  @media (prefers-color-scheme:dark){
-    :root:not([data-theme]){
-      color-scheme:dark;
-      --bg:#000; --card:#1c1c1e; --text:#f5f5f7; --sub:#a1a1a6; --line:#3a3a3c; --accent:#2997ff; --accent-soft:#0b2540; --ok:#30d158; --warn:#ffb454;
-    }
-  }
+  /* 預設一律使用淺色,只有使用者按下按鈕手動選擇後才會切到深色 */
   .topbar{display:flex;justify-content:flex-end;margin-bottom:12px}
   .theme-btn{font:inherit;font-size:18px;line-height:1;cursor:pointer;color:var(--text);background:var(--card);
     border:1.5px solid var(--line);border-radius:50%;width:40px;height:40px;padding:0;
@@ -95,15 +89,14 @@ try{ var __t = localStorage.getItem('theme'); if(__t==='light'||__t==='dark') do
   .price span{color:var(--sub);font-size:13px}
   .price small{display:block;color:var(--sub);font-size:12px;line-height:1.4;margin-top:2px}
   .price em{display:block;font-style:normal;font-size:12px;color:var(--warn);margin-top:4px}
-  .price .promo{display:inline-block;margin-top:8px;padding:4px 10px;border-radius:999px;
-    background:var(--ok);color:#fff;font-size:12px;font-weight:600}
-  .promo-banner{display:flex;align-items:center;gap:12px;background:var(--card);
-    border:1.5px solid var(--ok);border-radius:var(--radius);padding:14px 20px;margin-bottom:20px}
-  .promo-banner .icon{font-size:28px;line-height:1}
-  .promo-banner .txt{flex:1}
-  .promo-banner b{display:block;color:var(--ok);font-size:15px}
-  .promo-banner small{color:var(--sub);font-size:13px}
-  @media (max-width:480px){.promo-banner{padding:12px 14px;gap:10px}.promo-banner b{font-size:14px}}
+  .confirm-bar{text-align:center;margin:0 0 20px}
+  .confirm-btn{font:inherit;font-size:17px;font-weight:600;cursor:pointer;color:#fff;
+    background:var(--accent);border:0;border-radius:999px;padding:14px 36px;transition:.15s;
+    box-shadow:0 2px 12px rgba(0,113,227,.3)}
+  .confirm-btn:hover:not(:disabled){opacity:.88;transform:translateY(-1px)}
+  .confirm-btn:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+  .confirm-btn:disabled{background:var(--line);color:var(--sub);cursor:not-allowed;box-shadow:none}
+  .confirm-hint{margin:10px 0 0;font-size:13px;color:var(--sub)}
   .price.big{background:var(--card);border-radius:12px;padding:14px 16px;margin:0 0 16px}
   .price.big b{font-size:30px;color:var(--accent)}
   .price.big small{font-size:13px}
@@ -126,14 +119,6 @@ try{ var __t = localStorage.getItem('theme'); if(__t==='light'||__t==='dark') do
     <h1>我該買哪一台 Mac?</h1>
     <p>選擇你的使用需求與常用軟體,即時為你推薦最適合的機型</p>
   </header>
-
-  <div class="promo-banner" id="promoBanner" role="note" hidden>
-    <span class="icon">⏰</span>
-    <div class="txt">
-      <b>限時促銷 10/01 – 10/18</b>
-      <small>推薦機型下方的綠色標籤為該檔期的優惠活動,實際優惠請以門市或官網為準</small>
-    </div>
-  </div>
 
   <noscript>
     <section class="panel" role="alert">
@@ -160,6 +145,11 @@ try{ var __t = localStorage.getItem('theme'); if(__t==='light'||__t==='dark') do
     <p class="hint">筆電方便攜帶,桌機同價位效能通常更好</p>
     <div class="seg chips" role="radiogroup" aria-labelledby="h-pref" id="pref"></div>
   </section>
+
+  <div class="confirm-bar">
+    <button class="confirm-btn" id="confirmBtn" type="button">✨ 產生推薦機型</button>
+    <p class="confirm-hint" id="confirmHint"></p>
+  </div>
 
   <div id="result" aria-live="polite"></div>
 
@@ -334,13 +324,9 @@ PREFS.forEach(p => {
   $('#pref').appendChild(c);
 });
 
-/* 深色模式開關:預設跟隨系統,按下後固定為深色/淺色並記住 */
+/* 深色模式開關:預設一律為淺色,按下後固定為深色/淺色並記住 */
 const themeBtn = $('#themeBtn');
-const darkMQ = window.matchMedia('(prefers-color-scheme: dark)');
-const isDark = () => {
-  const t = document.documentElement.dataset.theme;
-  return t ? t==='dark' : darkMQ.matches;
-};
+const isDark = () => document.documentElement.dataset.theme === 'dark';
 function paintThemeBtn(){
   const d = isDark();
   themeBtn.setAttribute('aria-pressed', String(d));
@@ -352,23 +338,33 @@ themeBtn.onclick = () => {
   try{ localStorage.setItem('theme', next); }catch(e){}
   paintThemeBtn();
 };
-/* 舊版瀏覽器沒有 addEventListener / 失敗時也不能影響後面的程式 */
-try{
-  if(darkMQ.addEventListener) darkMQ.addEventListener('change', paintThemeBtn);
-  else if(darkMQ.addListener) darkMQ.addListener(paintThemeBtn);
-}catch(e){}
 paintThemeBtn();
 
 document.addEventListener('change', e => {
   const el = e.target;
   if(el.name==='pref') state.pref = el.value;
   else if((el.id||'').indexOf('c-')===0) el.checked ? state.ids.add(el.value) : state.ids.delete(el.value);
-  render();
+  paintConfirm();          // 只更新按鈕狀態,等按下確認才產生推薦
 });
 $('#reset').onclick = () => {
   state.ids.clear();
   document.querySelectorAll('input[type=checkbox]').forEach(i=>i.checked=false);
+  $('#result').innerHTML = '';
+  paintConfirm();
+};
+
+/* ============ 確認按鈕 ============ */
+const confirmBtn = $('#confirmBtn'), confirmHint = $('#confirmHint');
+function paintConfirm(){
+  const n = state.ids.size;
+  confirmBtn.disabled = n === 0;
+  confirmHint.textContent = n === 0
+    ? '請先從上方選擇至少一項使用需求或常用軟體'
+    : `已選 ${n} 項,點擊上方按鈕產生推薦`;
+}
+confirmBtn.onclick = () => {
   render();
+  $('#result').scrollIntoView({behavior:'smooth', block:'start'});
 };
 
 /* ============ 推薦邏輯 ============ */
@@ -401,41 +397,10 @@ function priceInfo(cfgs, ram, sto){
   cfg = [...cfgs].sort((a,b)=>b.ram-a.ram || b.price-a.price)[0];
   return {cfg, note:`價格表中此機型最高為 ${cfg.ram} GB,低於建議的 ${ram} GB,更高規格請至官網確認選配與價格`};
 }
-/* ===== 促銷活動對照表(依 2026/10/01-10/18 操盤資料)===== */
-/* 促銷檔期:到期後 banner 自動隱藏,卡片上的促銷標籤也會停止顯示 */
-const PROMO_START = new Date('2026-10-01T00:00:00+08:00');
-const PROMO_END   = new Date('2026-10-18T23:59:59+08:00');
-const promoActive = () => {
-  const now = new Date();
-  return now >= PROMO_START && now <= PROMO_END;
-};
-(function(){
-  const el = document.getElementById('promoBanner');
-  if(el && promoActive()) el.hidden = false;
-})();
-
-function getPromo(label){
-  if(!promoActive()) return '';
-  if(label.indexOf('MacBook Neo')>=0)       return '🎁 現折 916 起';
-  if(label.indexOf('MacBook Air 13')>=0)    return '🎁 滿萬送 400 配件金';
-  if(label.indexOf('MacBook Air 15')>=0)    return '🎁 滿萬送 500 配件金';
-  if(label.indexOf('iMac')>=0)              return '🎁 現折 6%';
-  if(label.indexOf('MacBook Pro 14')>=0)    return '🎁 現折 3,894 起';
-  if(label.indexOf('MacBook Pro 16')>=0)    return '🎁 現折 5,994 起';
-  if(label.indexOf('Mac mini · M6')>=0)     return '🎁 滿萬送 200 配件金';
-  if(label.indexOf('Mac Studio')>=0)        return '🎁 滿萬送 200 配件金';
-  return '';
-}
-function promoTag(cfg){
-  const p = getPromo(cfg.label);
-  return p ? `<span class="promo">${p}</span>` : '';
-}
-
 function cfgHtml(cfg, note=''){
   return `<div class="price"><b>${nt(cfg.price)}</b>
     <small>${cfg.label}<br>${cfg.ram} GB 記憶體 · ${fmtSto(cfg.sto)} 儲存空間</small>
-    ${note ? `<em>⚠️ ${note}</em>` : ''}
-    ${promoTag(cfg)}</div>`;
+    ${note ? `<em>⚠️ ${note}</em>` : ''}</div>`;
 }
 function priceBlock(cfgs, ram, sto){
   const {cfg, note} = priceInfo(cfgs, ram, sto);
@@ -443,7 +408,7 @@ function priceBlock(cfgs, ram, sto){
 }
 function fromPrice(cfgs){
   const cfg = [...cfgs].sort((a,b)=>a.price-b.price)[0];
-  return `<div class="price"><b>${nt(cfg.price)}</b> <span>起</span>${promoTag(cfg)}</div>`;
+  return `<div class="price"><b>${nt(cfg.price)}</b> <span>起</span></div>`;
 }
 
 function render(){
@@ -556,7 +521,7 @@ function render(){
     <div class="alt"><h4>其他選擇</h4><div class="alt-grid">${alts}</div></div>
   </div>`;
 }
-render();
+paintConfirm();
 </script>
 </body>
 </html>
