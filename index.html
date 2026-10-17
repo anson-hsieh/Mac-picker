@@ -8,10 +8,13 @@
 <!-- Google Analytics (GA4) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-JSGRVMQWVX"></script>
 <script>
+  /* 從網址讀取門市代號,例如 ?store=taipei01;沒帶就當作 "unknown" */
+  var STORE_ID = (new URLSearchParams(location.search)).get('store') || 'unknown';
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-  gtag('config', 'G-JSGRVMQWVX');
+  /* 把 store 設為所有事件的預設參數,之後任何 gtag event 都會自動帶上 */
+  gtag('config', 'G-JSGRVMQWVX', { store: STORE_ID });
 </script>
 <script>
 /* 載入前先套用已儲存的主題,避免閃爍 */
@@ -398,6 +401,7 @@ confirmBtn.onclick = () => {
     const side = state.pref==='desk' ? 'desk' : 'laptop';
     const model = (t && t[side]) ? t[side].n : '';
     gtag('event', 'generate_recommendation', {
+      store:          STORE_ID,
       selected_count: picked.length,
       selected_ids:   picked.join(','),
       pref:           state.pref,
