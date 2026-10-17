@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>我該買哪一台 Mac?</title>
+
+<!-- Google Analytics (GA4) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JSGRVMQWVX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-JSGRVMQWVX');
+</script>
 <script>
 /* 載入前先套用已儲存的主題,避免閃爍 */
 try{ var __t = localStorage.getItem('theme'); if(__t==='light'||__t==='dark') document.documentElement.dataset.theme = __t; }catch(e){}
@@ -381,6 +390,23 @@ function paintConfirm(){
 }
 confirmBtn.onclick = () => {
   render();
+  // GA4 自訂事件:追蹤「產生推薦」被按幾次、使用者選了什麼、推薦了什麼
+  try{
+    const picked = [...state.ids];
+    const r = recommend();
+    const t = r ? TIERS[r.lvl] : null;
+    const side = state.pref==='desk' ? 'desk' : 'laptop';
+    const model = (t && t[side]) ? t[side].n : '';
+    gtag('event', 'generate_recommendation', {
+      selected_count: picked.length,
+      selected_ids:   picked.join(','),
+      pref:           state.pref,
+      level:          r ? r.lvl : 0,
+      ram_gb:         r ? r.ram : 0,
+      storage_gb:     r ? r.sto : 0,
+      recommended:    model,
+    });
+  }catch(e){}
   $('#result').scrollIntoView({behavior:'smooth', block:'start'});
 };
 
