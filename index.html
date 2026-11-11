@@ -239,8 +239,8 @@ const SOFTWARE = [
    c(記憶體GB, 儲存GB, 價格, 說明) */
 const c = (ram,sto,price,label)=>({ram,sto,price,label});
 const NEO = [
-  c(8,256,22900,'MacBook Neo 13 吋 · A18 Pro'),
-  c(8,512,25900,'MacBook Neo 13 吋 · A18 Pro'),
+  c(8,256,23900,'MacBook Neo 13 吋 · A18 Pro'),
+  c(8,512,26900,'MacBook Neo 13 吋 · A18 Pro'),
 ];
 const AIR13 = [
   c(16,512,42900,'MacBook Air 13.6 吋 · M5(10 核 CPU / 8 核 GPU)'),
@@ -253,27 +253,31 @@ const AIR15 = [
   c(24,1024,67400,'MacBook Air 15.3 吋 · M5'),
 ];
 const IMAC = [
-  c(16,256,49900,'iMac 24 吋 · M4(8 核 CPU / 8 核 GPU)'),
-  c(16,256,57900,'iMac 24 吋 · M4(10 核 CPU / 10 核 GPU)'),
-  c(16,512,64900,'iMac 24 吋 · M4(10 核 CPU / 10 核 GPU)'),
-  c(24,512,71900,'iMac 24 吋 · M4(10 核 CPU / 10 核 GPU)'),
+  c(16,256,49900,'iMac 24 吋 · M6(10 核 CPU / 10 核 GPU)'),
+  c(16,256,57900,'iMac 24 吋 · M6(12 核 CPU / 12 核 GPU)'),
+  c(16,512,64900,'iMac 24 吋 · M6(12 核 CPU / 12 核 GPU)'),
+  c(24,512,71900,'iMac 24 吋 · M6(12 核 CPU / 12 核 GPU)'),
 ];
 const MBP14 = [
-  c(16,1024,64900,'MacBook Pro 14.2 吋 · M5'),
-  c(24,1024,71900,'MacBook Pro 14.2 吋 · M5'),
-  c(32,1024,78900,'MacBook Pro 14.2 吋 · M5'),
+  c(16,1024,64900,'MacBook Pro 14.2 吋 · M6(12 核 CPU / 12 核 GPU)'),
+  c(24,1024,71900,'MacBook Pro 14.2 吋 · M6(12 核 CPU / 12 核 GPU)'),
+  c(32,1024,78900,'MacBook Pro 14.2 吋 · M6(12 核 CPU / 12 核 GPU)'),
 ];
 const MBP_PRO = [
   c(24,1024,84900,'MacBook Pro 14.2 吋 · M5 Pro(15 核 CPU / 16 核 GPU)'),
   c(24,1024,99900,'MacBook Pro 16.2 吋 · M5 Pro(18 核 CPU / 20 核 GPU)'),
   c(24,2048,102400,'MacBook Pro 14.2 吋 · M5 Pro(15 核 CPU / 16 核 GPU)'),
   c(24,2048,109900,'MacBook Pro 14.2 吋 · M5 Pro(18 核 CPU / 20 核 GPU)'),
-  c(48,1024,120900,'MacBook Pro 16.2 吋 · M5 Pro(18 核 CPU / 20 核 GPU)'),
 ];
+/* MBP PROLED XRD(OLED 螢幕的新旗艦系列,M5 Pro / M5 Max 兩種晶片) */
 const MBP_MAX = [
-  c(36,2048,139900,'MacBook Pro 14.2 吋 · M5 Max(18 核 CPU / 32 核 GPU)'),
-  c(36,2048,144900,'MacBook Pro 16.2 吋 · M5 Max(18 核 CPU / 32 核 GPU)'),
-  c(48,2048,169900,'MacBook Pro 16.2 吋 · M5 Max(18 核 CPU / 40 核 GPU)'),
+  c(24,1024,97900,'MacBook Pro PROLED XRD 14.2 吋 · M5 Pro(15 核 CPU / 16 核 GPU)'),
+  c(24,1024,114900,'MacBook Pro PROLED XRD 16.3 吋 · M5 Pro(18 核 CPU / 20 核 GPU)'),
+  c(48,1024,125900,'MacBook Pro PROLED XRD 14.2 吋 · M5 Pro(18 核 CPU / 20 核 GPU)'),
+  c(48,1024,135900,'MacBook Pro PROLED XRD 16.3 吋 · M5 Pro(18 核 CPU / 20 核 GPU)'),
+  c(36,2048,152900,'MacBook Pro PROLED XRD 14.2 吋 · M5 Max(18 核 CPU / 32 核 GPU)'),
+  c(36,2048,159900,'MacBook Pro PROLED XRD 16.3 吋 · M5 Max(18 核 CPU / 32 核 GPU)'),
+  c(48,2048,184900,'MacBook Pro PROLED XRD 16.3 吋 · M5 Max(18 核 CPU / 40 核 GPU)'),
 ];
 const MINI = [
   c(16,256,29900,'Mac mini · M6(12 核 CPU / 12 核 GPU)'),
@@ -289,14 +293,14 @@ const TIERS = [
   {name:'入門', laptop:{n:'MacBook Neo 或 MacBook Air', cfgs:[...NEO,...AIR13], t:'輕巧、無風扇靜音、續航強,日常使用綽綽有餘'},
          desk:{n:'Mac mini(M6)', cfgs:MINI, t:'小巧桌機,CP 值最高;需另購螢幕、鍵盤與滑鼠'}},
   {name:'主流', laptop:{n:'MacBook Air 13 / 15 吋(M5)', cfgs:[...AIR13,...AIR15], t:'輕薄、續航強;13 吋好攜帶、15 吋螢幕更大,多工與輕度創作更舒適'},
-         desk:{n:'iMac 24 吋(M4)', cfgs:IMAC, t:'一體機,4.5K 螢幕與喇叭,開箱即用'}},
-  {name:'進階', laptop:{n:'MacBook Pro 14 吋(M5)', cfgs:MBP14, t:'主動散熱、Liquid Retina XDR 螢幕,持續效能穩定'},
+         desk:{n:'iMac 24 吋(M6)', cfgs:IMAC, t:'一體機,4.5K 螢幕與喇叭,開箱即用'}},
+  {name:'進階', laptop:{n:'MacBook Pro 14 吋(M6)', cfgs:MBP14, t:'主動散熱、Liquid Retina XDR 螢幕,持續效能穩定'},
          desk:{n:'Mac mini(M6,高記憶體配置)', cfgs:MINI, t:'同價位效能最高;需另購螢幕。想要一體機可改選 iMac'}},
   {name:'專業', laptop:{n:'MacBook Pro 14 / 16 吋(M5 Pro)', cfgs:MBP_PRO, t:'更多 CPU / GPU 核心與記憶體頻寬,適合 4K 剪輯與大型遊戲'},
          desk:{n:'Mac mini(M5 Pro)', cfgs:MINI_PRO, t:'小機身高效能,性價比極高的專業桌機;需另購螢幕'}},
-  {name:'高階', laptop:{n:'MacBook Pro 14 / 16 吋(M5 Max)', cfgs:MBP_MAX, t:'頂級 GPU 與超大統一記憶體,3D 與本機 AI 的行動工作站'},
+  {name:'高階', laptop:{n:'MacBook Pro PROLED XRD 14 / 16 吋', cfgs:MBP_MAX, t:'OLED 螢幕的新一代旗艦;頂級 GPU 與超大統一記憶體,3D 與本機 AI 的行動工作站'},
          desk:{n:'Mac Studio(M5 Max)', cfgs:STUDIO_MAX, t:'長時間滿載也穩定,散熱與擴充性更佳;需另購螢幕'}},
-  {name:'旗艦', laptop:{n:'MacBook Pro 16 吋(M5 Max,最高配置)', cfgs:[MBP_MAX[2]], t:'筆電的極限配置,需要極大記憶體時的選擇'},
+  {name:'旗艦', laptop:{n:'MacBook Pro PROLED XRD 16.3 吋(M5 Max,最高配置)', cfgs:[MBP_MAX[MBP_MAX.length-1]], t:'筆電的極限配置,OLED 螢幕,需要極大記憶體時的選擇'},
          desk:{n:'Mac Studio(M5 Ultra)', cfgs:STUDIO_ULTRA, t:'最強效能與最大記憶體,可處理超大型模型與專案;需另購螢幕'}},
 ];
 
