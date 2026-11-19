@@ -7,6 +7,9 @@
 
 <!-- Google Analytics (GA4) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-JSGRVMQWVX"></script>
+
+<!-- html2canvas:用來把推薦結果擷取成 PNG 圖片下載 -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
   /* 從網址讀取門市代號,例如 ?store=taipei01;沒帶就當作 "unknown" */
   var STORE_ID = (new URLSearchParams(location.search)).get('store') || 'unknown';
@@ -70,7 +73,14 @@ try{ var __t = localStorage.getItem('theme'); if(__t==='light'||__t==='dark') do
   .empty{text-align:center;color:var(--sub);padding:48px 16px}
   .empty .big{font-size:48px}
   .main{background:linear-gradient(135deg,var(--accent-soft),var(--card));border:1.5px solid var(--accent);
-    border-radius:var(--radius);padding:28px;animation:pop .35s ease}
+    border-radius:var(--radius);padding:28px;animation:pop .35s ease;position:relative}
+  .download-btn{position:absolute;top:16px;right:16px;font:inherit;font-size:13px;font-weight:600;
+    cursor:pointer;color:var(--text);background:var(--card);border:1.5px solid var(--line);
+    border-radius:999px;padding:6px 14px;transition:.15s;z-index:2}
+  .download-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+  .download-btn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+  .download-btn:disabled{opacity:.55;cursor:wait}
+  @media (max-width:480px){.download-btn{top:12px;right:12px;padding:5px 12px;font-size:12px}}
   @keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
   @media (prefers-reduced-motion:reduce){.main{animation:none}}
   .badge{display:inline-block;background:var(--accent);color:#fff;font-size:12px;padding:3px 10px;border-radius:999px;margin-bottom:10px}
@@ -527,6 +537,7 @@ function render(){
 
   out.innerHTML = `
   <div class="main" id="mainCard">
+    <button class="download-btn" id="downloadBtn" type="button" aria-label="下載為圖片" title="下載為圖片">📥 下載圖片</button>
     <span class="badge">雙推薦 · 已選 ${r.count} 項</span>
     <h3>${title}</h3>
     <p class="tagline">${tagline}</p>
@@ -554,7 +565,69 @@ function render(){
 
     <div class="alt"><h4>其他選擇</h4><div class="alt-grid">${alts}</div></div>
   </div>`;
+
+  // 綁定「下載圖片」按鈕(每次 render 都會重新產生按鈕,所以要重綁)
+  const dlBtn = document.getElementById('downloadBtn');
+  if(dlBtn) dlBtn.onclick = () => downloadResult(dlBtn, r);
 }
+
+/* ============ 下載推薦結果為 PNG 圖片 ============ */
+function downloadResult(btn, r){
+  if(typeof html2canvas === 'undefined'){
+    alert('下載功能載入中,請稍候再試');
+    return;
+  }
+  const card = document.getElementById('mainCard');
+  if(!card) return;
+
+  const origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '處理中…';
+  btn.style.visibility = 'hidden';   // 擷取時暫時隱藏按鈕,避免拍到自己
+
+  // 擷取用的背景色(配合當前深淺色模式)
+  const bg = getComputedStyle(document.body).backgroundColor;
+
+  html2canvas(card, {
+    backgroundColor: bg,
+    scale: window.devicePixelRatio > 1 ? 2 : 1.5,   // 畫質放大
+    useCORS: true,
+    logging: false,
+  }).then(canvas => {
+    // 檔名:時間 + 推薦機型
+    const now = new Date();
+    const ts = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+    const t = TIERS[r.lvl];
+    const side = state.pref==='desk' ? 'desk' : 'laptop';
+    const modelName = (t && t[side] && t[side].n) ? t[side].n.replace(/[^\w\u4e00-\u9fa5]+/g,'_') : 'Mac推薦';
+    const filename = `Mac推薦_${modelName}_${ts}.png`;
+
+    canvas.toBlob(blob => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(()=>URL.revokeObjectURL(url), 1000);
+
+      // GA4 事件:追蹤下載
+      try{
+        gtag('event', 'download_image', {
+          Store: STORE_ID,
+          recommended: modelName,
+          level: r.lvl,
+        });
+      }catch(e){}
+    }, 'image/png');
+  }).catch(err => {
+    console.error(err);
+    alert('下載失敗,請重試');
+  }).finally(() => {
+    btn.textContent = origText;
+    btn.style.visibility = '';
+    btn.disabled = false;
+  });
+}
+
 paintConfirm();
 </script>
 </body>
