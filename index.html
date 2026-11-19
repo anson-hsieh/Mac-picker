@@ -8,8 +8,8 @@
 <!-- Google Analytics (GA4) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-JSGRVMQWVX"></script>
 
-<!-- html2canvas:用來把推薦結果擷取成 PNG 圖片下載 -->
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<!-- html-to-image:把推薦結果擷取成 PNG 圖片下載(比 html2canvas 更穩定) -->
+<script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.13/dist/html-to-image.min.js"></script>
 <script>
   /* 從網址讀取門市代號,例如 ?store=taipei01;沒帶就當作 "unknown" */
   var STORE_ID = (new URLSearchParams(location.search)).get('store') || 'unknown';
@@ -571,32 +571,10 @@ function render(){
   if(dlBtn) dlBtn.onclick = () => downloadResult(dlBtn, r);
 }
 
-/* ============ 下載推薦結果為 PNG 圖片 ============ */
-
-/* 把所有子元素的解析後顏色凍結到 inline style,避免 html2canvas 解析 CSS 變數時反白
-   回傳一個還原函式,擷取完後呼叫即可復原 */
-function freezeColors(root){
-  const snaps = [];
-  const props = ['color','background-color','background-image','border-top-color','border-right-color','border-bottom-color','border-left-color'];
-  const walk = el => {
-    if(el.nodeType !== 1) return;
-    snaps.push({el, style: el.getAttribute('style')});
-    const cs = getComputedStyle(el);
-    for(const p of props){
-      const v = cs.getPropertyValue(p);
-      if(v) el.style.setProperty(p, v, 'important');
-    }
-    for(const c of el.childNodes) walk(c);
-  };
-  walk(root);
-  return () => snaps.forEach(s => {
-    if(s.style === null) s.el.removeAttribute('style');
-    else s.el.setAttribute('style', s.style);
-  });
-}
-
+/* ============ 下載推薦結果為 PNG 圖片 ============
+   使用 html-to-image 函式庫,對現代 CSS(含 CSS 變數、linear-gradient)支援較好 */
 function downloadResult(btn, r){
-  if(typeof html2canvas === 'undefined'){
+  if(typeof htmlToImage === 'undefined'){
     alert('下載功能載入中,請稍候再試');
     return;
   }
@@ -606,23 +584,22 @@ function downloadResult(btn, r){
   const origText = btn.textContent;
   btn.disabled = true;
   btn.textContent = '處理中…';
-  btn.style.visibility = 'hidden';
 
-  // 擷取前強制切成淺色模式
+  // 擷取前強制切成淺色模式,確保下載的圖片不管當下是深淺色都是乾淨的淺色版
   const root = document.documentElement;
   const origTheme = root.dataset.theme;
   root.dataset.theme = 'light';
 
-  // 等一個 frame 讓瀏覽器完成重繪,再凍結顏色並擷取
+  // 等瀏覽器完成重繪
   requestAnimationFrame(() => setTimeout(() => {
-    const restore = freezeColors(card);
-
-    html2canvas(card, {
+    htmlToImage.toPng(card, {
       backgroundColor: '#ffffff',
-      scale: window.devicePixelRatio > 1 ? 2 : 1.5,
-      useCORS: true,
-      logging: false,
-    }).then(canvas => {
+      pixelRatio: 2,                                    // 2 倍解析度,畫質清晰
+      cacheBust: true,
+      // 過濾掉下載按鈕本身,避免被拍到
+      filter: node => !(node.classList && node.classList.contains('download-btn')),
+    }).then(dataUrl => {
+      // 檔名:時間 + 推薦機型
       const now = new Date();
       const ts = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
       const t = TIERS[r.lvl];
@@ -630,30 +607,24 @@ function downloadResult(btn, r){
       const modelName = (t && t[side] && t[side].n) ? t[side].n.replace(/[^\w\u4e00-\u9fa5]+/g,'_') : 'Mac推薦';
       const filename = `Mac推薦_${modelName}_${ts}.png`;
 
-      canvas.toBlob(blob => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = filename;
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        setTimeout(()=>URL.revokeObjectURL(url), 1000);
+      const a = document.createElement('a');
+      a.href = dataUrl; a.download = filename;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
 
-        try{
-          gtag('event', 'download_image', {
-            Store: STORE_ID,
-            recommended: modelName,
-            level: r.lvl,
-          });
-        }catch(e){}
-      }, 'image/png');
+      try{
+        gtag('event', 'download_image', {
+          Store: STORE_ID,
+          recommended: modelName,
+          level: r.lvl,
+        });
+      }catch(e){}
     }).catch(err => {
-      console.error(err);
-      alert('下載失敗,請重試');
+      console.error('下載失敗:', err);
+      alert('下載失敗,建議改用瀏覽器內建截圖功能(Mac:Cmd+Shift+4,iPhone:側鍵+音量上鍵)');
     }).finally(() => {
-      restore();                           // 還原 inline style
       if(origTheme) root.dataset.theme = origTheme;
       else delete root.dataset.theme;
       btn.textContent = origText;
-      btn.style.visibility = '';
       btn.disabled = false;
     });
   }, 50));
