@@ -572,6 +572,29 @@ function render(){
 }
 
 /* ============ 下載推薦結果為 PNG 圖片 ============ */
+
+/* 把所有子元素的解析後顏色凍結到 inline style,避免 html2canvas 解析 CSS 變數時反白
+   回傳一個還原函式,擷取完後呼叫即可復原 */
+function freezeColors(root){
+  const snaps = [];
+  const props = ['color','background-color','background-image','border-top-color','border-right-color','border-bottom-color','border-left-color'];
+  const walk = el => {
+    if(el.nodeType !== 1) return;
+    snaps.push({el, style: el.getAttribute('style')});
+    const cs = getComputedStyle(el);
+    for(const p of props){
+      const v = cs.getPropertyValue(p);
+      if(v) el.style.setProperty(p, v, 'important');
+    }
+    for(const c of el.childNodes) walk(c);
+  };
+  walk(root);
+  return () => snaps.forEach(s => {
+    if(s.style === null) s.el.removeAttribute('style');
+    else s.el.setAttribute('style', s.style);
+  });
+}
+
 function downloadResult(btn, r){
   if(typeof html2canvas === 'undefined'){
     alert('下載功能載入中,請稍候再試');
@@ -583,22 +606,23 @@ function downloadResult(btn, r){
   const origText = btn.textContent;
   btn.disabled = true;
   btn.textContent = '處理中…';
-  btn.style.visibility = 'hidden';   // 擷取時暫時隱藏按鈕,避免拍到自己
+  btn.style.visibility = 'hidden';
 
-  // 擷取前強制切成淺色模式,避免深色模式下 html2canvas 處理 CSS 變數時反白
+  // 擷取前強制切成淺色模式
   const root = document.documentElement;
   const origTheme = root.dataset.theme;
   root.dataset.theme = 'light';
 
-  // 等一個 frame 讓瀏覽器完成重繪,再擷取
+  // 等一個 frame 讓瀏覽器完成重繪,再凍結顏色並擷取
   requestAnimationFrame(() => setTimeout(() => {
+    const restore = freezeColors(card);
+
     html2canvas(card, {
       backgroundColor: '#ffffff',
       scale: window.devicePixelRatio > 1 ? 2 : 1.5,
       useCORS: true,
       logging: false,
     }).then(canvas => {
-      // 檔名:時間 + 推薦機型
       const now = new Date();
       const ts = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
       const t = TIERS[r.lvl];
@@ -613,7 +637,6 @@ function downloadResult(btn, r){
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
         setTimeout(()=>URL.revokeObjectURL(url), 1000);
 
-        // GA4 事件:追蹤下載
         try{
           gtag('event', 'download_image', {
             Store: STORE_ID,
@@ -626,7 +649,7 @@ function downloadResult(btn, r){
       console.error(err);
       alert('下載失敗,請重試');
     }).finally(() => {
-      // 還原深色模式設定
+      restore();                           // 還原 inline style
       if(origTheme) root.dataset.theme = origTheme;
       else delete root.dataset.theme;
       btn.textContent = origText;
