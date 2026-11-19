@@ -585,47 +585,55 @@ function downloadResult(btn, r){
   btn.textContent = '處理中…';
   btn.style.visibility = 'hidden';   // 擷取時暫時隱藏按鈕,避免拍到自己
 
-  // 擷取用的背景色(配合當前深淺色模式)
-  const bg = getComputedStyle(document.body).backgroundColor;
+  // 擷取前強制切成淺色模式,避免深色模式下 html2canvas 處理 CSS 變數時反白
+  const root = document.documentElement;
+  const origTheme = root.dataset.theme;
+  root.dataset.theme = 'light';
 
-  html2canvas(card, {
-    backgroundColor: bg,
-    scale: window.devicePixelRatio > 1 ? 2 : 1.5,   // 畫質放大
-    useCORS: true,
-    logging: false,
-  }).then(canvas => {
-    // 檔名:時間 + 推薦機型
-    const now = new Date();
-    const ts = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
-    const t = TIERS[r.lvl];
-    const side = state.pref==='desk' ? 'desk' : 'laptop';
-    const modelName = (t && t[side] && t[side].n) ? t[side].n.replace(/[^\w\u4e00-\u9fa5]+/g,'_') : 'Mac推薦';
-    const filename = `Mac推薦_${modelName}_${ts}.png`;
+  // 等一個 frame 讓瀏覽器完成重繪,再擷取
+  requestAnimationFrame(() => setTimeout(() => {
+    html2canvas(card, {
+      backgroundColor: '#ffffff',
+      scale: window.devicePixelRatio > 1 ? 2 : 1.5,
+      useCORS: true,
+      logging: false,
+    }).then(canvas => {
+      // 檔名:時間 + 推薦機型
+      const now = new Date();
+      const ts = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+      const t = TIERS[r.lvl];
+      const side = state.pref==='desk' ? 'desk' : 'laptop';
+      const modelName = (t && t[side] && t[side].n) ? t[side].n.replace(/[^\w\u4e00-\u9fa5]+/g,'_') : 'Mac推薦';
+      const filename = `Mac推薦_${modelName}_${ts}.png`;
 
-    canvas.toBlob(blob => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = filename;
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      setTimeout(()=>URL.revokeObjectURL(url), 1000);
+      canvas.toBlob(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(()=>URL.revokeObjectURL(url), 1000);
 
-      // GA4 事件:追蹤下載
-      try{
-        gtag('event', 'download_image', {
-          Store: STORE_ID,
-          recommended: modelName,
-          level: r.lvl,
-        });
-      }catch(e){}
-    }, 'image/png');
-  }).catch(err => {
-    console.error(err);
-    alert('下載失敗,請重試');
-  }).finally(() => {
-    btn.textContent = origText;
-    btn.style.visibility = '';
-    btn.disabled = false;
-  });
+        // GA4 事件:追蹤下載
+        try{
+          gtag('event', 'download_image', {
+            Store: STORE_ID,
+            recommended: modelName,
+            level: r.lvl,
+          });
+        }catch(e){}
+      }, 'image/png');
+    }).catch(err => {
+      console.error(err);
+      alert('下載失敗,請重試');
+    }).finally(() => {
+      // 還原深色模式設定
+      if(origTheme) root.dataset.theme = origTheme;
+      else delete root.dataset.theme;
+      btn.textContent = origText;
+      btn.style.visibility = '';
+      btn.disabled = false;
+    });
+  }, 50));
 }
 
 paintConfirm();
